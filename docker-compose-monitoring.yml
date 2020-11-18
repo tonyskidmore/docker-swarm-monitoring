@@ -1,0 +1,62 @@
+---
+
+# https://docs.docker.com/compose/compose-file/
+version: "3.8"
+
+services:
+
+  grafana:
+    # https://hub.docker.com/r/grafana/grafana/tags
+    image: grafana/grafana:6.7.2
+    ports:
+      - 3000:3000
+    networks:
+      - test
+    configs:
+      - source: grafana-config-prov-dashboard
+        target: /etc/grafana/provisioning/dashboards/rabbitmq.yaml
+      - source: grafana-config-prov-datasource
+        target: /etc/grafana/provisioning/datasources/prometheus.yaml
+      - source: grafana-config-dashboard
+        target: /dashboards/RabbitMQ-Overview.json
+      - source: grafana-runtime-dashboard
+        target: /dashboards/Runtime-Dashboard.json
+    environment:
+      # https://grafana.com/plugins/flant-statusmap-panel
+      # https://grafana.com/plugins/grafana-piechart-panel
+      # https://grafana.com/plugins/grafana-polystat-panel
+      # https://grafana.com/plugins/jdbranham-diagram-panel
+      # https://grafana.com/plugins/michaeldmoore-multistat-panel
+      # https://grafana.com/plugins/vonage-status-panel
+      # https://grafana.com/plugins/yesoreyeram-boomtable-panel
+      GF_INSTALL_PLUGINS: "flant-statusmap-panel,grafana-piechart-panel"
+
+  prometheus:
+    # https://hub.docker.com/r/prom/prometheus/tags
+    image: prom/prometheus:v2.17.2
+    networks:
+      - test
+    ports:
+      - 9090:9090
+    configs:
+      - source: prometheus-config
+        target: /etc/prometheus/prometheus.yml
+        uid: '65534'
+        gid: '65534'
+        mode: 0440
+
+configs:
+  prometheus-config:
+    file: prometheus/prometheus.yml
+  grafana-config-prov-dashboard:
+    file: grafana/dashboards.yml
+  grafana-config-prov-datasource:
+    file: grafana/datasources.yml
+  grafana-config-dashboard:
+    file: grafana/dashboards/RabbitMQ-Overview.json
+  grafana-runtime-dashboard:
+    file: grafana/dashboards/Runtime-Dashboard.json    
+
+networks:
+  test:
+    external: true

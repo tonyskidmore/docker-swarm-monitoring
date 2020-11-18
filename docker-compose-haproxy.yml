@@ -1,0 +1,26 @@
+---
+
+version: "3.8"
+
+services:
+  haproxy:
+    image: haproxy:2.3.0-alpine
+    ports:
+      - 15672:15672
+      - 5672:5672
+      - 1936:1936
+    configs:
+      - source: haproxy-config
+        target: /usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      - test
+    deploy:
+      mode: global
+
+networks:
+  test:
+    external: true
+
+configs:
+  haproxy-config:
+    file: ./haproxy/haproxy.cfg

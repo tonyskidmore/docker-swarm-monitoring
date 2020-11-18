@@ -1,0 +1,24 @@
+---
+
+version: "3.8"
+
+services:
+
+  java:
+    image: tonyskidmore/java:v1
+    networks:
+      - test
+    ports:
+    - mode: ingress
+      published: 8080
+      target: 8080
+    deploy:
+      replicas: 4
+      endpoint_mode: vip
+      placement:
+        constraints:
+        - node.platform.os == linux
+
+networks:
+  test:
+    external: true

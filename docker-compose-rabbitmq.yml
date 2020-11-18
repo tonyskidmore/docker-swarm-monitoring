@@ -1,0 +1,76 @@
+---
+
+version : "3.8"
+
+services:
+  rabbitmq-01:
+    image: rabbitmq:3.8.9-management
+    hostname: rabbitmq-01
+    environment:
+      - RABBITMQ_ERLANG_COOKIE="RABBITMQ-ERLANG-COOKIE"
+    networks:
+      - test
+    volumes:
+      - rabbitmq-01-data:/var/lib/rabbitmq
+    configs:
+      - source: rabbitmq-config
+        target: /etc/rabbitmq/rabbitmq.conf
+      - source: rabbitmq-plugins
+        target: /etc/rabbitmq/enabled_plugins
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.labels.rabbitmq1 == true]
+
+  rabbitmq-02:
+    image: rabbitmq:3.8.9-management
+    hostname: rabbitmq-02
+    environment:
+      - RABBITMQ_ERLANG_COOKIE="RABBITMQ-ERLANG-COOKIE"
+    networks:
+      - test
+    volumes:
+      - rabbitmq-02-data:/var/lib/rabbitmq
+    configs:
+      - source: rabbitmq-config
+        target: /etc/rabbitmq/rabbitmq.conf
+      - source: rabbitmq-plugins
+        target: /etc/rabbitmq/enabled_plugins
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.labels.rabbitmq2 == true]
+
+  rabbitmq-03:
+    image: rabbitmq:3.8.9-management
+    hostname: rabbitmq-03
+    environment:
+      - RABBITMQ_ERLANG_COOKIE="RABBITMQ-ERLANG-COOKIE"
+    networks:
+      - test
+    volumes:
+      - rabbitmq-03-data:/var/lib/rabbitmq
+    configs:
+      - source: rabbitmq-config
+        target: /etc/rabbitmq/rabbitmq.conf
+      - source: rabbitmq-plugins
+        target: /etc/rabbitmq/enabled_plugins
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.labels.rabbitmq3 == true]
+
+networks:
+  test:
+    external: true
+
+volumes:
+ rabbitmq-01-data:
+ rabbitmq-02-data:
+ rabbitmq-03-data:
+
+configs:
+  rabbitmq-config:
+    file: ./rabbitmq/rabbitmq.conf
+  rabbitmq-plugins:
+    file: ./rabbitmq/enabled_plugins

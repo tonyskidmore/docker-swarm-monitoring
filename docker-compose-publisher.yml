@@ -1,0 +1,24 @@
+---
+
+# https://docs.docker.com/compose/compose-file/
+version: "3.8"
+
+services:
+
+  publisher:
+    image: tonyskidmore/publisher:0.0.1
+    ports:
+      - 80:80
+    networks:
+      - test
+    environment:
+      RABBIT_HOST: rabbitmq-01
+      RABBIT_PORT: 5672
+      RABBIT_USERNAME: guest
+      RABBIT_PASSWORD: guest
+
+networks:
+  test:
+    external: true
+
+      
