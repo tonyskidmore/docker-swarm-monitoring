@@ -172,6 +172,64 @@ curl 192.168.217.133:8500/v1/status/peers
 
 You should now be able to access the Consul UI from the Windows host via http://192.168.217.133:8500/.  The Consul Service should appear under the Services tab, all with successful Health Checks.  Under Nodes all nodes should be listed under Healthy Nodes, with a star badge indicating the leader.
 
+#### RabbitMQ
+
+The first thing to mention prior to moving onto deploying the RabbitMQ cluster is mention [Monitoring with Prometheus & Grafana](https://www.rabbitmq.com/prometheus.html).  This is excellent information detailing all aspects of monitoring Rabbit MQ with Prometheus.  The [Quick Start](https://www.rabbitmq.com/prometheus.html#quick-start) is highly recommended to run through to see what is possible with RabbitMQ, Prometheus and Grafana.  We have taken the `RabbitMQ-Overview` dashboard from that repository and included it as part of this project to demonstrate how a dashboard can be automatically deployed.  I would also point you in the direction of the session hosted by Gerhard Lazu & Michal Kuratczyk from the RabbitMQ Summit 2019 (see [References](#references)).  
+
+Following on from the previous Consul deployment we will now deploy the RabbitMQ cluster.  To begin with we will label the Docker Swarm nodes so that placement occurs as desired.  For example, the `rabbitmq-01` configuration will be deployed to the node with label `rabbitmq1`.  We can label the nodes and validate that these have been applied as follows:
+
+
+````powershell
+
+# label each node for placement rule
+1..3 | % { & docker node update --label-add "rabbitmq$_=true" "docker-swarm-0$_" }
+docker-swarm-01
+docker-swarm-02
+docker-swarm-03
+
+# check that labels have been applied as expected, in order
+1..3 | % { (docker inspect "docker-swarm-0$_" | ConvertFrom-Json).Spec.Labels | ConvertTo-Json }
+{
+    "rabbitmq1":  "true"
+}
+{
+    "rabbitmq2":  "true"
+}
+{
+    "rabbitmq3":  "true"
+}
+
+````
+
+Now that the labels have been allocated for placement we deploy the RabbitMQ stack:
+
+````powershell
+
+docker stack deploy -c docker-compose-rabbitmq.yml rabbitmq
+
+````
+
+We can validate validate the deployment. This can take a few moments for the expected 1/1 REPLICAS to be displayed so retry the command until that state is in effect:
+
+````powershell
+
+docker stack services rabbitmq
+ID                  NAME                   MODE                REPLICAS            IMAGE                       PORTS
+998kdxiqwt4z        rabbitmq_rabbitmq-02   global              1/1                 rabbitmq:3.8.9-management
+rg4ffk5syvxm        rabbitmq_rabbitmq-01   global              1/1                 rabbitmq:3.8.9-management
+sljwr1n8abfj        rabbitmq_rabbitmq-03   global              1/1                 rabbitmq:3.8.9-management
+
+docker stack ps rabbitmq
+ID                  NAME                                             IMAGE                       NODE                DESIRED STATE       CURRENT STATE                ERROR               PORTS
+5l1afiv1o1uu        rabbitmq_rabbitmq-02.fu8kqvcxfuficfi1ld0owy0l6   rabbitmq:3.8.9-management   docker-swarm-02     Running             Running about a minute ago
+2khcfvfivmz0        rabbitmq_rabbitmq-01.qmh74hjo5djwwzqa7jkyknisb   rabbitmq:3.8.9-management   docker-swarm-01     Running             Running about a minute ago
+vujetjx6muqf        rabbitmq_rabbitmq-03.ydqqjvpshir1nhss6surd11kr   rabbitmq:3.8.9-management   docker-swarm-03     Running             Running about a minute ago
+
+````
+
+The RabbitMQ cluster has now been deployed but because it is placed behind HAproxy we cannot access it until that service has been deployed.
+
+
 
 ### References
 
