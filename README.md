@@ -126,7 +126,7 @@ docker stack deploy -c docker-compose-consul.yml consul
 
 ````
 
-After deployment check that the service was deployed checking that the commands below contain something similar to te example output:
+After deployment check that the service was deployed checking that the commands below contain something similar to the example output below:
 
 ````powershell
 
@@ -170,7 +170,7 @@ curl 192.168.217.133:8500/v1/status/peers
 
 ````
 
-You should now be able to access the Consul UI from the Windows host via http://192.168.217.133:8500/.  The consul service should appear under the Services tab, all with successful Health Checks.  Under Nodes all node should be listed under Healthy Nodes, with a star badge indicating the leader.
+You should now be able to access the Consul UI from the Windows host via http://192.168.217.133:8500/.  The Consul Service should appear under the Services tab, all with successful Health Checks.  Under Nodes all nodes should be listed under Healthy Nodes, with a star badge indicating the leader.
 
 
 ### References
