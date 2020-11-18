@@ -37,6 +37,63 @@ None of the deployments are meant to describe how these products should be deplo
 
 The layout above represents a high-level view of the services that will be deployed and the externally accessible ports from the Windows host system.  It also shows the monitoring scraping communication lines from Prometheus to: Docker Swarm nodes, RabbitMQ cluster nodes and the Java application.  Grafana is shown using Prometheus as a data source.
 
+### Getting started
+
+The first step is to ensure that the Docker Swarm mode cluster has been deployed as per the [tonyskidmore/docker-swarm](https://github.com/tonyskidmore/docker-swarm) project.  A differently deployed Docker swarm cluster can be used if desired but references to the specifics of that cluster will need to be adjusted. 
+
+If you are following along with the initial cluster deployment and then moving here perform the following steps on you Windows 10 host:  
+
+````powershell
+
+cd \vagrant
+
+git clone https://github.com/tonyskidmore/docker-swarm-monitoring.git
+
+cd docker-swarm-monitoring
+
+````
+
+#### Windows host PowerShell access
+The default Docker Swarm mode cluster has been deployed in such a way that access to it from the Windows host is made via unencrypted communication to to the Docker Swarm manager node (`192.168.217.133:2375`).  It is necessary to set environment variables in any PowerShell session so this works:
+
+````powershell
+$env:DOCKER_HOST="192.168.217.133:2375"
+$env:DOCKER_TLS_VERIFY=""
+
+docker node ls
+ID                            HOSTNAME            STATUS              AVAILABILITY        MANAGER STATUS      ENGINE VERSION
+qmh74hjo5djwwzqa7jkyknisb *   docker-swarm-01     Ready               Active              Leader              19.03.13
+fu8kqvcxfuficfi1ld0owy0l6     docker-swarm-02     Ready                Active                                 19.03.13
+ydqqjvpshir1nhss6surd11kr     docker-swarm-03     Ready               Active                                  19.03.13
+
+````
+If your output is similar to the above then you are good to go.
+
+### Service deployment
+
+#### TLDR
+
+The [Start-SwarmApps.ps1](https://github.com/tonyskidmore/docker-swarm-monitoring/blob/main/Start-SwarmApps.ps1) PowerShell script can be used interactively or ran from a PowerShell prompt on the Windows 10 host to drive all of the deployments.  The script needs some refactoring but for now it has worked in testing.  Further below are the more individual and generic steps that can be performed to deploy the application stacks.  
+
+If you wanted to just deploy everything without stepping through everything then you should be able to execute the following:
+
+````powershell
+
+cd c:\vagrant\docker-swarm-monitoring
+.\Start-SwarmApps.ps1
+
+````
+If there are no issues then the script should deploy all of the services shown in the [Services layout](#services-layout) section, opening a browser to each as it goes.  Click on the script window to refocus on the script.  You can run with the `-OpenBrowser $false` parameter to avoid the browser functionality if desired.  
+
+_Note_:  
+PowerShell script execution has to be allowed on your system to be able to run scripts.  To allow script execution, if not already enabled, run PowerShell as Administrator and run the following prior to running the instructions above:  
+
+````powershell
+
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Force
+
+````
+
 ### References
 
 #### RabbitMQ

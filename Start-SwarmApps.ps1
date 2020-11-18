@@ -202,7 +202,12 @@ if($OpenBrowser) {
     
     for($i = 0 ; $i -lt 40 ; $i++) {
         Write-Verbose -Message "Waiting for RabbitMQ web UI to be available"
-        $resp = Invoke-WebRequest -Uri "http://192.168.217.133:15672" -UseBasicParsing -ErrorAction SilentlyContinue
+        try {
+            $resp = Invoke-WebRequest -Uri "http://192.168.217.133:15672" -UseBasicParsing -ErrorAction Stop
+        }
+        catch {
+            Write-Verbose -Message "Did not get successful response from RabbitMQ"
+        }
         if($resp.StatusCode -eq 200) { break }
         Start-Sleep -Seconds 1
     }
@@ -226,11 +231,11 @@ if(-not $?) {
 # wait for java app replicas to start up
 if ($javaDeployed) { Start-Sleep -Seconds 10 }
 
-# check the status of the service - we want to see REPLICAS 4/4
+# check the status of the service - we want to see REPLICAS 3/3
 for($i = 0 ; $i -lt 40 ; $i++) {
     $javaService = docker stack services java --format='{{json .}}' | ConvertFrom-Json
     Write-Verbose -Message "Waiting for java services to start"
-    if($javaService.Replicas -eq '4/4') { $javaServiceOK = $true ; break } else { $javaServiceOK = $false }
+    if($javaService.Replicas -eq '3/3') { $javaServiceOK = $true ; break } else { $javaServiceOK = $false }
     Start-Sleep -Seconds 1
 }
 if($javaServiceOK -eq $false) { throw "Failed to start java app service" }
