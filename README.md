@@ -73,7 +73,7 @@ If your output is similar to the above then you are good to go.
 
 #### TLDR
 
-The [Start-SwarmApps.ps1](https://github.com/tonyskidmore/docker-swarm-monitoring/blob/main/Start-SwarmApps.ps1) PowerShell script can be used interactively or ran from a PowerShell prompt on the Windows 10 host to drive all of the deployments.  The script needs some refactoring but for now it has worked in testing.  Further below are the more individual and generic steps that can be performed to deploy the application stacks.  There are some tidbits amongst the more detailed steps along with some further descriptions.
+The [Start-SwarmApps.ps1](https://github.com/tonyskidmore/docker-swarm-monitoring/blob/main/Start-SwarmApps.ps1) PowerShell script can be used interactively or ran from a PowerShell prompt on the Windows 10 host to drive all of the deployments.  The script needs some refactoring but for now it has worked in testing.  Further below are the more individual and generic steps that can be performed to deploy the application stacks.  There are some tidbits amongst the more detailed steps along with some further descriptions.  Be sure to review the `docker-compose-*.yml` files being deployed along with any associated product configuration files.
 
 If you wanted to just deploy everything in one go then you can execute the following:
 
@@ -227,8 +227,63 @@ vujetjx6muqf        rabbitmq_rabbitmq-03.ydqqjvpshir1nhss6surd11kr   rabbitmq:3.
 
 ````
 
-The RabbitMQ cluster has now been deployed but because it is placed behind HAproxy we cannot access it until that service has been deployed.
+The RabbitMQ cluster has now been deployed but because it is placed behind HAProxy we cannot access it until that service has been deployed.
 
+#### HAProxy
+
+HAProxy can be deployed in a similar fashion to the previous service stacks:  
+
+````powershell
+
+docker stack deploy -c docker-compose-haproxy.yml haproxy
+
+````
+
+validate the deployment, waiting for `REPLICAS` be in the desired state of `3/3`:
+
+````powershell
+
+docker stack services haproxy
+ID                  NAME                MODE                REPLICAS            IMAGE                  PORTS
+eio9bx9mtser        haproxy_haproxy     global              3/3                 haproxy:2.3.0-alpine   *:1936->1936/tcp, *:5672->5672/tcp, *:15672->15672/tcp
+
+docker stack ps haproxy
+ID                  NAME                                        IMAGE                  NODE                DESIRED STATE       CURRENT STATE                ERROR               PORTS
+u0dsfxxp09qq        haproxy_haproxy.ydqqjvpshir1nhss6surd11kr   haproxy:2.3.0-alpine   docker-swarm-03     Running             Running about a minute ago
+mabdfp8x2qfe        haproxy_haproxy.fu8kqvcxfuficfi1ld0owy0l6   haproxy:2.3.0-alpine   docker-swarm-02     Running             Running about a minute ago
+zfalsvyx5p39        haproxy_haproxy.qmh74hjo5djwwzqa7jkyknisb   haproxy:2.3.0-alpine   docker-swarm-01     Running             Running about a minute ago
+
+````
+
+We can validate that RabbitMQ is accessible via HAProxy with a simple PowerShell command, which should return `StatusCode: 200`:
+
+````powershell
+
+Invoke-WebRequest -Uri "http://192.168.217.133:15672" -UseBasicParsing
+StatusCode        : 200
+StatusDescription : OK
+Content           : <!DOCTYPE html>
+                    <html>
+                      <head>
+                        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+                        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                        <title>RabbitMQ Management</ti...
+RawContent        : HTTP/1.1 200 OK
+                    content-security-policy: script-src 'self' 'unsafe-eval' 'unsafe-inline'; object-src 'self'
+                    vary: origin
+                    Content-Length: 2884
+                    Content-Type: text/html
+                    Date: Wed, 18 Nov 2020 20:15:...
+Forms             :
+Headers           : {[content-security-policy, script-src 'self' 'unsafe-eval' 'unsafe-inline'; object-src 'self'], [vary, origin], [Content-Length, 2884], [Content-Type, text/html]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        :
+RawContentLength  : 2884
+
+````
+We should now be able to access the RabbitMQ UI using the URL http://192.168.217.133:15672 from the Windows host.  The default credentials are `Username: guest` and `Password: guest`.  Once logged in, the 3 nodes should appear in the Overview tab under the Nodes section.
 
 
 ### References
