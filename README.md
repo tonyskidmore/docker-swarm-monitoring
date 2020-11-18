@@ -94,6 +94,85 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Force
 
 ````
 
+#### Docker network
+
+The services being deployed in this repo are targeting a network called `test` so this to be created first:
+
+```` powershell
+
+docker network create --driver=overlay --attachable test
+c6bzyhnfpcapbrnjtydznmsvc
+
+docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+0a65fa8b26c5        bridge              bridge              local
+d8191f32e336        docker_gwbridge     bridge              local
+28c6d06a3dc9        host                host                local
+vfy3m29793sq        ingress             overlay             swarm
+3bce52d11586        none                null                local
+c6bzyhnfpcap        test                overlay             swarm
+
+```
+
+#### Consul
+
+The first service to be deployed is Consul.  This will provide the service discovery for the RabbitMQ cluster.  
+
+Assuming that the host you are running the docker commands on has the required binaries installed (e.g. the Windows host with Docker Toolbox installed) and the required environment variables set (see [Windows host PowerShell access](#windows-host-powershell-access)) then to deploy the Consul stack change to the location of this cloned repository and run:
+
+````powershell
+
+docker stack deploy -c docker-compose-consul.yml consul
+
+````
+
+After deployment check that the service was deployed checking that the commands below contain something similar to te example output:
+
+````powershell
+
+docker stack services consul
+ID                  NAME                MODE                REPLICAS            IMAGE               PORTS
+ID                  NAME                MODE                REPLICAS            IMAGE               PORTS
+2wamsz17spvs        consul_consul       global              3/3                 consul:1.7.9        *:8400->8400/tcp, *:8500->8500/tcp, *:8600->8600/tcp
+
+docker stack ps consul
+ID                  NAME                                      IMAGE               NODE                DESIRED STATE       CURRENT STATE                ERROR               PORTS
+qviwseufg9f6        consul_consul.fu8kqvcxfuficfi1ld0owy0l6   consul:1.7.9        docker-swarm-02     Running             Running about a minute ago
+tr79t27j23rj        consul_consul.qmh74hjo5djwwzqa7jkyknisb   consul:1.7.9        docker-swarm-01     Running             Running about a minute ago
+yl6xbs12px2l        consul_consul.ydqqjvpshir1nhss6surd11kr   consul:1.7.9        docker-swarm-03     Running             Running about a minute ago
+
+````
+
+You can validate the status of the Consul cluster status from the command line:
+
+````powershell
+
+# check status of leader election
+(Invoke-WebRequest -Uri 192.168.217.133:8500/v1/status/leader -UseBasicParsing).Content
+"10.0.2.4:8300"
+
+# verify active peers
+(Invoke-WebRequest -Uri 192.168.217.133:8500/v1/status/peers -UseBasicParsing).Content
+["10.0.2.5:8300","10.0.2.4:8300","10.0.2.3:8300"]
+
+````
+or in bash:
+
+````bash
+
+# check status of leader election
+curl 192.168.217.133:8500/v1/status/leader
+"10.0.2.4:8300"
+
+# verify active peers
+curl 192.168.217.133:8500/v1/status/peers
+["10.0.2.4:8300","10.0.2.5:8300","10.0.2.3:8300"]
+
+````
+
+You should now be able to access the Consul UI from the Windows host via http://192.168.217.133:8500/.  The consul service should appear under the Services tab, all with successful Health Checks.  Under Nodes all node should be listed under Healthy Nodes, with a star badge indicating the leader.
+
+
 ### References
 
 #### RabbitMQ
