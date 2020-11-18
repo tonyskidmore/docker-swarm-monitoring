@@ -63,7 +63,7 @@ $env:DOCKER_TLS_VERIFY=""
 docker node ls
 ID                            HOSTNAME            STATUS              AVAILABILITY        MANAGER STATUS      ENGINE VERSION
 qmh74hjo5djwwzqa7jkyknisb *   docker-swarm-01     Ready               Active              Leader              19.03.13
-fu8kqvcxfuficfi1ld0owy0l6     docker-swarm-02     Ready                Active                                 19.03.13
+fu8kqvcxfuficfi1ld0owy0l6     docker-swarm-02     Ready               Active                                  19.03.13
 ydqqjvpshir1nhss6surd11kr     docker-swarm-03     Ready               Active                                  19.03.13
 
 ````
@@ -73,9 +73,9 @@ If your output is similar to the above then you are good to go.
 
 #### TLDR
 
-The [Start-SwarmApps.ps1](https://github.com/tonyskidmore/docker-swarm-monitoring/blob/main/Start-SwarmApps.ps1) PowerShell script can be used interactively or ran from a PowerShell prompt on the Windows 10 host to drive all of the deployments.  The script needs some refactoring but for now it has worked in testing.  Further below are the more individual and generic steps that can be performed to deploy the application stacks.  
+The [Start-SwarmApps.ps1](https://github.com/tonyskidmore/docker-swarm-monitoring/blob/main/Start-SwarmApps.ps1) PowerShell script can be used interactively or ran from a PowerShell prompt on the Windows 10 host to drive all of the deployments.  The script needs some refactoring but for now it has worked in testing.  Further below are the more individual and generic steps that can be performed to deploy the application stacks.  There are some tidbits amongst the more detailed steps along with some further descriptions.
 
-If you wanted to just deploy everything without stepping through everything then you should be able to execute the following:
+If you wanted to just deploy everything in one go then you can execute the following:
 
 ````powershell
 
