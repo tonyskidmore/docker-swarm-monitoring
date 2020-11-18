@@ -285,6 +285,14 @@ RawContentLength  : 2884
 ````
 We should now be able to access the RabbitMQ UI using the URL http://192.168.217.133:15672 from the Windows host.  The default credentials are `Username: guest` and `Password: guest`.  Once logged in, the 3 nodes should appear in the Overview tab under the Nodes section.
 
+#### Java app
+
+#### Monitoring with Prometheus and Grafana
+
+#### Message queue publisher
+
+#### Message queue consumer
+
 
 ### References
 
