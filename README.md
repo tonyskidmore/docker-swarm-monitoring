@@ -30,8 +30,12 @@ In this lab style environment it is intended that each service is deployed to th
 Content published by [Ahmet Vehbi Olgaç](https://www.linkedin.com/in/ahmetvehbiolgac/?originalSubdomain=tr) and [Marcel Dempers](https://www.linkedin.com/in/marceldempers/?originalSubdomain=au) and courses on [Pluralsight](https://www.pluralsight.com) by [Elton Stoneman](https://www.linkedin.com/in/eltonstoneman/?originalSubdomain=uk) really helped me a lot as the basis of the content of this repo (see section the [References](#references)).
 
 _Note_:  
-None of the deployments are meant to describe how these products should be deployed in a Production or any other environment.  The aim is just to show from a high-level perspective how these products work and how some of them can be monitored.
+None of the deployments are meant to describe how these products should be deployed in a Production or any other environment.  The aim is just to show from a high-level perspective how these products work and how some of them can be monitored.  It also show the monitoring scraping communication lines from Prometheus to: Docker Swarm nodes, RabbitMQ cluster nodes and the Java application.  Grafana is shown using Prometheus as a data source.
 
+### Services layout
+![Alt text](images/layout.png "Services layout")
+
+The layout above represents a high-level view of the services that will be deployed and the externally accessible ports from the Windows host system.
 
 ### References
 
