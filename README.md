@@ -417,13 +417,79 @@ If we go back to the Grafana Home page and open `Runtime Dashboard` we will see 
 
 ![Alt text](images/grafana-runtime-metrics.png "Grafana Runtime Metrics")
 
-In this dashboard we can see some application level metrics (including the stock orders we created during the java app deployment) as well as metrics from the JVM and Tomcat.  There are also Docker node metrics (not shown).
+In this dashboard we can see some application level metrics (including the stock orders we created during the java app deployment) as well as metrics from the JVM and Tomcat.  There are also Docker node metrics (not shown above).
 
 
 #### Message queue publisher deployment
 
+Now that we have the monitoring service up and running it would be useful to trigger activity in RabbitMQ.  A good solution would be to investigate further the [RabbitMQ PerfTest](https://rabbitmq.github.io/rabbitmq-perf-test/stable/htmlsingle/) for generating load testing.  However, in this example we are going to do something simpler by deploying `publisher` and `consumer` services.  
+
+To deploy the publisher service:
+
+````powershell
+
+docker stack deploy -c docker-compose-publisher.yml publisher
+
+````
+
+and the check the details:
+
+````powershell
+
+docker stack services publisher
+ID                  NAME                  MODE                REPLICAS            IMAGE                          PORTS
+rkq3dqg7tme4        publisher_publisher   replicated          1/1                 tonyskidmore/publisher:0.0.1   *:80->80/tcp
+
+docker stack ps publisher
+ID                  NAME                    IMAGE                          NODE                DESIRED STATE       CURRENT STATE            ERROR               PORTS
+z5c3epp9g8wc        publisher_publisher.1   tonyskidmore/publisher:0.0.1   docker-swarm-02     Running             Running 31 seconds ago
+
+````
+
+Once the publisher service is up and running we can send some messages via the application's HTTP interface:
+
+````powershell
+
+1..20 | % { Invoke-RestMethod -Method POST -Uri "http://192.168.217.133:80/publish/message$_" -UseBasicParsing }
+
+````
+or from bash:
+
+````bash
+
+for ((i=1;i<=20;i++)); do curl -X POST "http://192.168.217.133:80/publish/message$i"; done
+
+````
+
+We should now see the message activity generated above:
+
+![Alt text](images/grafana-rabbitmq-messages.png "Grafana RabbitMQ Messages")
+
 #### Message queue consumer deployment
 
+We can then run the consumer service to pull any messages in the queue.  This gives us a simple mechanism to allow us to push and pull messages to maybe develop and test a dashboard and alerting based on message patterns.
+
+````powershell
+
+docker stack deploy -c docker-compose-consumer.yml consumer
+
+````
+
+and the check the details:
+
+````powershell
+
+docker stack services consumer
+ID                  NAME                MODE                REPLICAS            IMAGE                         PORTS
+8ipmjax1iiid        consumer_consumer   replicated          1/1                 tonyskidmore/consumer:0.0.1
+
+docker stack ps consumer
+ID                  NAME                  IMAGE                         NODE                DESIRED STATE       CURRENT STATE            ERROR               PORTS
+r449h1jq1cyp        consumer_consumer.1   tonyskidmore/consumer:0.0.1   docker-swarm-02     Running             Running 46 seconds ago
+
+````
+
+If we then go back to the `RabbitMQ-Overview` dashboard we should see that that `Ready messages` is now 0 and some further consumer based activity.
 
 ### References
 
