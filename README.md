@@ -106,6 +106,15 @@ cd c:\vagrant\docker-swarm-monitoring
 ````
 If there are no issues then the script should deploy all of the services shown in the [Services layout](#services-layout) section, opening a browser to each as it goes.  Click on the script window to refocus on the script.  You can run with the `-OpenBrowser $false` parameter to avoid the browser functionality if desired.  
 
+To deploy only a subset of services the script can be run with the `-DeployList` with a CSV separated list of services.  For example,  to deploy only as far as HAProxy you could run:
+
+````powershell
+
+cd c:\vagrant\docker-swarm-monitoring
+.\Start-SwarmApps.ps1 -DeployList "consul,rabbitmq,haproxy"
+
+````
+
 _Note_:  
 PowerShell script execution has to be allowed on your system to be able to run scripts.  To allow script execution, if not already enabled, run PowerShell as Administrator and run the following prior to running the instructions above:  
 
@@ -308,7 +317,7 @@ We should now be able to access the RabbitMQ UI using the URL http://192.168.217
 
 #### Java app deployment
 
-In an attempt to demonstrate gathering some very basic Java virtual machine(JVM) and Tomcat metrics we will deploy a simple Java application.  The demo app is a bit flakey but is serves a purpose.  I have been looking to add something a bit more interesting but have not got round to that just yet, something on the lines of [Monitoring Spring Boot Apps with Micrometer, Prometheus, and Grafana](https://stackabuse.com/monitoring-spring-boot-apps-with-micrometer-prometheus-and-grafana/) maybe.  Maybe you can try that?  
+In an attempt to demonstrate gathering some very basic Java virtual machine(JVM) and Tomcat metrics we will deploy a simple Java application.  The demo app is a bit flakey but is serves a purpose.  I have been looking to add something a bit more interesting but have not got round to that just yet, something on the lines of [Monitoring Spring Boot Apps with Micrometer, Prometheus, and Grafana](https://stackabuse.com/monitoring-spring-boot-apps-with-micrometer-prometheus-and-grafana/) or [Monitoring Java Spring Boot applications with Prometheus: Part 1](https://blog.kubernauts.io/https-blog-kubernauts-io-monitoring-java-spring-boot-applications-with-prometheus-part-1-c0512f2acd7b) maybe.   
 
 Anyway for now we will deploy what we have:   
 
