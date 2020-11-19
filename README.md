@@ -1,6 +1,27 @@
 Docker Swarm Monitoring
 =======================
 
+### Table of Contents
+
+- [Introduction](#introduction)
+- [Service architecture](#services-architecture)
+- [Getting started](#getting-started)
+  * [Windows host PowerShell access](#windows-host-powershell-access)
+- [Service deployment](#service-deployment)
+  * [TLDR automated](#tldr-automated)
+  * [Docker network](#docker-network)
+  * [Consul deployment](#consul-deployment)
+  * [RabbitMQ deployment](#rabbitmq-deployment)
+  * [HAProxy deployment](#haproxy-deployment)
+  * [Java app deployment](#java-app-deployment)
+  * [Prometheus and Grafana deployment](#prometheus-and-grafana-deployment)
+  * [Message queue publisher deployment](#message-queue-publisher-deployment)
+  * [Message queue consumer deployment](#message-queue-consumer-deployment)
+- [References](#references)
+  * [RabbitMQ](#rabbitmq)
+  * [Prometheus](#prometheus)
+
+
 ### Introduction
 
 This repository is a result of some learning and investigation I performed into some technologies that were mostly new to me, namely:
@@ -13,7 +34,7 @@ This repository is a result of some learning and investigation I performed into 
 * [Grafana](https://grafana.com/oss/grafana/)
 * [Java Apps](https://www.java.com)
 
-Primarily, I was interested in how Prometheus and Grafana worked in combination with each other.
+The focus is on Prometheus and Grafana working in combination with each other to display metrics in dashboards.
 
 The code in this project is meant to be deployed onto a Docker Swarm mode cluster that was previously deployed using [tonyskidmore/docker-swarm](https://github.com/tonyskidmore/docker-swarm).  Although that Docker swarm deployment here is hosted on a Windows 10 system running Vagrant and a few other requirements, the code in this repo can be deployed directly from a Linux system also.  Although not covered in detail here it was originally created and tested in a purely Linux environment.
 
@@ -32,7 +53,7 @@ Content published by [Ahmet Vehbi Olgaç](https://www.linkedin.com/in/ahmetvehbi
 _Note_:  
 None of the deployments are meant to describe how these products should be deployed in a Production or any other type of environment.  The aim is just to show from a high-level perspective how these products work and how some of them can be monitored.  
 
-### Services layout
+### Services architecture
 ![Alt text](images/layout.png "Services layout")
 
 The layout above represents a high-level view of the services that will be deployed and the externally accessible ports from the Windows host system.  It also shows the monitoring scraping communication lines from Prometheus to: Docker Swarm nodes, RabbitMQ cluster nodes and the Java application.  Grafana is shown using Prometheus as a data source.
@@ -71,7 +92,7 @@ If your output is similar to the above then you are good to go.
 
 ### Service deployment
 
-#### TLDR
+#### TLDR automated
 
 The [Start-SwarmApps.ps1](https://github.com/tonyskidmore/docker-swarm-monitoring/blob/main/Start-SwarmApps.ps1) PowerShell script can be used interactively or ran from a PowerShell prompt on the Windows 10 host to drive all of the deployments.  The script needs some refactoring but for now it has worked in testing.  Further below are the more individual and generic steps that can be performed to deploy the application stacks.  There are some tidbits amongst the more detailed steps along with some further descriptions.  Be sure to review the `docker-compose-*.yml` files being deployed along with any associated product configuration files.
 
@@ -114,7 +135,7 @@ c6bzyhnfpcap        test                overlay             swarm
 
 ````
 
-#### Consul
+#### Consul deployment
 
 The first service to be deployed is Consul.  This will provide the service discovery for the RabbitMQ cluster.  
 
@@ -172,7 +193,7 @@ curl 192.168.217.133:8500/v1/status/peers
 
 You should now be able to access the Consul UI from the Windows host via http://192.168.217.133:8500/.  The Consul Service should appear under the Services tab, all with successful Health Checks.  Under Nodes all nodes should be listed under Healthy Nodes, with a star badge indicating the leader.
 
-#### RabbitMQ
+#### RabbitMQ deployment
 
 The first thing to mention prior to moving onto deploying the RabbitMQ cluster is mention [Monitoring with Prometheus & Grafana](https://www.rabbitmq.com/prometheus.html).  This is excellent information detailing all aspects of monitoring Rabbit MQ with Prometheus.  The [Quick Start](https://www.rabbitmq.com/prometheus.html#quick-start) is highly recommended to run through to see what is possible with RabbitMQ, Prometheus and Grafana.  We have taken the `RabbitMQ-Overview` dashboard from that repository and included it as part of this project to demonstrate how a dashboard can be automatically deployed.  I would also point you in the direction of the session hosted by Gerhard Lazu & Michal Kuratczyk from the RabbitMQ Summit 2019 (see [References](#references)).  
 
@@ -229,7 +250,7 @@ vujetjx6muqf        rabbitmq_rabbitmq-03.ydqqjvpshir1nhss6surd11kr   rabbitmq:3.
 
 The RabbitMQ cluster has now been deployed but because it is placed behind HAProxy we cannot access it until that service has been deployed.
 
-#### HAProxy
+#### HAProxy deployment
 
 HAProxy can be deployed in a similar fashion to the previous service stacks:  
 
@@ -285,13 +306,59 @@ RawContentLength  : 2884
 ````
 We should now be able to access the RabbitMQ UI using the URL http://192.168.217.133:15672 from the Windows host.  The default credentials are `Username: guest` and `Password: guest`.  Once logged in, the 3 nodes should appear in the Overview tab under the Nodes section.
 
-#### Java app
+#### Java app deployment
 
-#### Monitoring with Prometheus and Grafana
+In an attempt to demonstrate gathering some very basic Java virtual machine(JVM) and Tomcat metrics we will deploy a simple Java application.  The demo app is a bit flakey but is serves a purpose.  I have been looking to add something a bit more interesting but have not got round to that just yet, something on the lines of [Monitoring Spring Boot Apps with Micrometer, Prometheus, and Grafana](https://stackabuse.com/monitoring-spring-boot-apps-with-micrometer-prometheus-and-grafana/) maybe.  Maybe you can try that?  
 
-#### Message queue publisher
+Anyway for now we will deploy what we have:   
 
-#### Message queue consumer
+````powershell
+
+docker stack deploy -c docker-compose-java.yml java
+
+````
+wait for the service to come up:
+````powershell
+
+docker stack services java
+ID                  NAME                MODE                REPLICAS            IMAGE                  PORTS
+x06apyuc7sm7        java_java           replicated          3/3                 tonyskidmore/java:v1   *:8080->8080/tcp
+
+
+docker stack ps java
+ID                  NAME                IMAGE                  NODE                DESIRED STATE       CURRENT STATE                ERROR               PORTS
+6ss6vlr5dyhu        java_java.1         tonyskidmore/java:v1   docker-swarm-03     Running             Running about a minute ago
+fwbcbj0f7q0w        java_java.2         tonyskidmore/java:v1   docker-swarm-02     Running             Running about a minute ago
+6ns2vhs11tl8        java_java.3         tonyskidmore/java:v1   docker-swarm-01     Running             Running about a minute ago
+
+````
+
+We can throw a little activity at the Tomcat server to see some activity when we get onto monitoring:
+
+````powershell
+
+for ($i=1 ;$i -lt 40 ; $i++) {  Invoke-WebRequest -Uri http://192.168.217.133:8080/ -UseBasicParsing | Out-Null }
+
+````
+
+or in bash:
+
+````bash
+
+for ((i=1;i<=40;i++)); do curl -s http://192.168.217.133:8080/ > /dev/null; done
+
+````
+
+Access the application in a browser using the URL http://192.168.217.133:8080 and click the `Order more stock` button a few times.  If an error is display just refresh the base URL and try again.  This is to generate some application level metrics.
+
+![Alt text](images/java-app.png "Java app")
+
+
+#### Prometheus and Grafana deployment
+
+#### Message queue publisher deployment
+
+#### Message queue consumer deployment
 
 
 ### References
