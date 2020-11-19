@@ -432,7 +432,7 @@ docker stack deploy -c docker-compose-publisher.yml publisher
 
 ````
 
-and the check the details:
+and then check the details:
 
 ````powershell
 
@@ -475,7 +475,7 @@ docker stack deploy -c docker-compose-consumer.yml consumer
 
 ````
 
-and the check the details:
+and then check the details:
 
 ````powershell
 
@@ -489,7 +489,7 @@ r449h1jq1cyp        consumer_consumer.1   tonyskidmore/consumer:0.0.1   docker-s
 
 ````
 
-If we then go back to the `RabbitMQ-Overview` dashboard we should see that that `Ready messages` is now 0 and some further consumer based activity.
+If we then go back to the `RabbitMQ-Overview` dashboard we should see that `Ready messages` is now 0 and some further consumer based activity.
 
 ### References
 
