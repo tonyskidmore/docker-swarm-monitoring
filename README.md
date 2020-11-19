@@ -317,7 +317,9 @@ Anyway for now we will deploy what we have:
 docker stack deploy -c docker-compose-java.yml java
 
 ````
+
 wait for the service to come up:
+
 ````powershell
 
 docker stack services java
@@ -355,6 +357,68 @@ Access the application in a browser using the URL http://192.168.217.133:8080 an
 
 
 #### Prometheus and Grafana deployment
+
+Now that the basics of what we want to monitor have been deployed we can move onto the focus of this project, which is the Prometheus and Grafana deployment:
+
+````powershell
+
+docker stack deploy -c docker-compose-monitoring.yml monitoring
+
+````
+
+we are only deploying a single instance of each, so just need to check that they come up ok:
+
+````powershell
+
+docker stack services monitoring
+ID                  NAME                    MODE                REPLICAS            IMAGE                     PORTS
+65kg5tif1lru        monitoring_grafana      replicated          1/1                 grafana/grafana:6.7.2     *:3000->3000/tcp
+lprl4h6bt0kv        monitoring_prometheus   replicated          1/1                 prom/prometheus:v2.17.2   *:9090->9090/tcp
+
+
+docker stack ps monitoring
+ID                  NAME                      IMAGE                     NODE                DESIRED STATE       CURRENT STATE                ERROR               PORTS
+4uirwo4bhljv        monitoring_prometheus.1   prom/prometheus:v2.17.2   docker-swarm-03     Running             Running about a minute ago
+6gjkyp3lm5db        monitoring_grafana.1      grafana/grafana:6.7.2     docker-swarm-01     Running             Running about a minute ago
+
+````
+
+First lets check that our defined targets are up in Prometheus at http://192.168.217.133:9090/targets.
+
+![Alt text](images/prometheus-targets.png "Prometheus targets")
+
+We should see that our `docker-managers`, `docker-workers`, `java-app`, `java-tomcat` and `rabbitmq-server` targets are all up.  
+
+If we navigate to the Configuration at http://192.168.217.133:9090/config we will see the config that was passed in as part of the [monitoring stack](https://github.com/tonyskidmore/docker-swarm-monitoring/blob/main/docker-compose-monitoring.yml) configuration file.
+
+![Alt text](images/prometheus-config.png "Prometheus config")
+
+If we explore the Graph tab in Prometheus at http://192.168.217.133:9090/graph we can click the `insert metric at cursor` (or type in the name of a metric if we know it into the query text box) to see all the available metrics that are being scraped.  For example, `rabbitmq_build_info`: 
+
+![Alt text](images/prometheus-graph.png "Prometheus graph")
+
+It is these [PromQL](https://prometheus.io/docs/prometheus/latest/querying/basics/) queries that form the foundation of the dashboard panels that we will see in Grafana.
+
+Having explored Prometheus let's open up Grafana at http://192.168.217.133:3000. The default credentials are `Username: admin` and `Password: admin` (you can `Skip` changing the password on first login).
+
+![Alt text](images/grafana-welcome.png "Grafana welcome")
+
+We can see that some configuration has been automatically applied as part of the deployment and we see a couple of pre-defined dashboards: `Runtime Dashboard` and [RabbitMQ-Overview](https://github.com/rabbitmq/rabbitmq-prometheus/blob/master/docker/grafana/dashboards/RabbitMQ-Overview.json) taken directly from the RabbitMQ examples that can be seen as part of the [Quick Start](https://www.rabbitmq.com/prometheus.html#quick-start) tutorial examples.
+
+If we open up the `RabbitMQ-Overview` dashboard we should see something like the below:
+
+![Alt text](images/grafana-rabbitmq-metrics.png "Grafana RabbitMQ")
+
+This includes the information that we queried directly in Prometheus i.e. `rabbitmq_build_info`.  However, if we edit the panel we can see that the PromQL is a bit more involved so that the data is displayed in the required format:
+
+![Alt text](images/grafana-rabbitmq-node-info.png "Grafana RabbitMQ Node Info")
+
+If we go back to the Grafana Home page and open `Runtime Dashboard` we will see a dashboard that has been custom made and then exported to [Runtime-Dashboard.json](https://github.com/tonyskidmore/docker-swarm-monitoring/blob/main/grafana/dashboards/Runtime-Dashboard.json) and automatically imported as part of the `monitoring` service deployment.
+
+![Alt text](images/grafana-runtime-metrics.png "Grafana Runtime Metrics")
+
+In this dashboard we can see some application level metrics (including the stock orders we created during the java app deployment) as well as metrics from the JVM and Tomcat.  There are also Docker node metrics (not shown).
+
 
 #### Message queue publisher deployment
 
